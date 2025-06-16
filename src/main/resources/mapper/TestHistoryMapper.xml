@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kmbeast.mapper.TestHistoryMapper">
+
+    <insert id="save">
+        INSERT INTO test_history (practice_id, paper_id,user_id, answer,post_score, create_time)
+        VALUES
+        <foreach collection="list" item="testHistory" index="index" separator=",">
+            (
+            #{testHistory.practiceId},
+            #{testHistory.paperId},
+            #{testHistory.userId},
+            #{testHistory.answer},
+            #{testHistory.postScore},
+            #{testHistory.createTime}
+            )
+        </foreach>
+    </insert>
+
+    <update id="update">
+        UPDATE test_history
+        <set>
+            <if test="practiceId != null">
+                practice_id = #{practiceId}
+            </if>
+            <if test="paperId != null">
+                paper_id = #{paperId}
+            </if>
+            <if test="userId != null">
+                user_id = #{userId}
+            </if>
+            <if test="postScore != null">
+                post_score = #{postScore}
+            </if>
+            <if test="answer != null and answer != ''">
+                answer = #{answer},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="batchDelete" parameterType="list">
+        DELETE FROM test_history WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="query" resultMap="BaseResultMap">
+
+        SELECT th.*,
+        pt.name AS project_name,
+        pr.ask_item,
+        pr.question,
+        u.user_name,
+        pr.answer AS ask_answer,
+        pr.right_answer,
+        pr.practice_type,
+        pa.id AS paper_id,
+        pa.name AS paper_name
+        FROM test_history th
+        LEFT JOIN practice pr ON pr.id = th.practice_id
+        LEFT JOIN project_type pt ON pt.id = pr.project_id
+        LEFT JOIN paper pa ON pa.id = th.paper_id
+        LEFT JOIN user u ON th.user_id = u.id
+        <where>
+            <if test="answer != null and answer != ''">
+                AND th.answer = #{answer}
+            </if>
+            <if test="practiceId != null">
+                AND th.practice_id = #{practiceId}
+            </if>
+            <if test="userId != null">
+                AND th.user_id = #{userId}
+            </if>
+            <if test="postScore != null">
+                AND th.post_score = #{postScore}
+            </if>
+            <if test="paperId != null">
+                AND th.paper_id = #{paperId}
+            </if>
+            <if test="startTime != null and endTime != null">
+                AND th.create_time BETWEEN #{startTime} AND #{endTime}
+            </if>
+        </where>
+        ORDER BY th.id DESC
+        <if test="current != null and size != null">
+            LIMIT #{current},#{size}
+        </if>
+    </select>
+
+    <select id="queryCount" resultType="integer">
+
+        SELECT COUNT(*)
+        FROM test_history th
+        <where>
+            <if test="answer != null and answer != ''">
+                AND th.answer = #{answer}
+            </if>
+            <if test="practiceId != null">
+                AND th.practice_id = #{practiceId}
+            </if>
+            <if test="userId != null">
+                AND th.user_id = #{userId}
+            </if>
+            <if test="paperId != null">
+                AND th.paper_id = #{paperId}
+            </if>
+            <if test="postScore != null">
+                AND th.post_score = #{postScore}
+            </if>
+            <if test="startTime != null and endTime != null">
+                AND th.create_time BETWEEN #{startTime} AND #{endTime}
+            </if>
+        </where>
+
+    </select>
+
+    <resultMap id="BaseResultMap" type="cn.kmbeast.pojo.vo.TestHistoryVO">
+        <id column="id" property="id"/>
+        <result column="ask_item" property="askItem"/>
+        <result column="practice_id" property="practiceId"/>
+        <result column="practice_type" property="practiceType"/>
+        <result column="project_name" property="projectName"/>
+        <result column="paper_name" property="paperName"/>
+        <result column="paper_id" property="paperId"/>
+        <result column="user_id" property="userId"/>
+        <result column="user_name" property="userName"/>
+        <result column="question" property="question"/>
+        <result column="answer" property="answer"/>
+        <result column="ask_answer" property="askAnswer"/>
+        <result column="right_answer" property="rightAnswer"/>
+        <result column="post_score" property="postScore"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+
+</mapper>

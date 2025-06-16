@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kmbeast.mapper.PaperPracticeMapper">
+
+    <insert id="batchSave">
+        INSERT INTO paper_practice (paper_id, practice_id)
+        VALUES
+        <foreach collection="list" index="index" item="paperPractice" separator=",">
+            (#{paperPractice.paperId},#{paperPractice.practiceId})
+        </foreach>
+    </insert>
+
+    <delete id="batchDelete" parameterType="list">
+        DELETE FROM paper_practice WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="del" parameterType="list">
+        DELETE FROM paper_practice WHERE practice_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="query" resultMap="BaseResultMap">
+        SELECT pp.id,
+        pra.ask_item,
+        pra.question,
+        pra.right_answer,
+        pra.answer,
+        pra.score,
+        pra.practice_type,
+        pp.paper_id,
+        pp.practice_id,
+        pt.name
+        AS project_type
+        FROM paper_practice pp
+        LEFT JOIN practice pra ON pra.id = pp.practice_id AND pra.ask_item IS NOT NULL
+        LEFT JOIN project_type pt ON pra.project_id = pt.id
+        <where>
+            <if test="id != null">
+                id = #{id}
+            </if>
+            <if test="paperId != null">
+                paper_id = #{paperId}
+            </if>
+            <if test="practiceId != null">
+                practice_id = #{practiceId}
+            </if>
+        </where>
+        ORDER BY pp.id DESC
+        <if test="current != null and size != null">
+            LIMIT #{current},#{size}
+        </if>
+    </select>
+
+    <select id="queryCount" resultType="integer">
+
+        SELECT COUNT(*)
+        FROM paper_practice
+        <where>
+            <if test="id != null">
+                id = #{id}
+            </if>
+            <if test="paperId != null">
+                paper_id = #{paperId}
+            </if>
+            <if test="practiceId != null">
+                practice_id = #{practiceId}
+            </if>
+        </where>
+
+    </select>
+
+    <resultMap id="BaseResultMap" type="cn.kmbeast.pojo.vo.PaperPracticeVO">
+        <id column="id" property="id"/>
+        <result column="paper_id" property="paperId"/>
+        <result column="practice_id" property="practiceId"/>
+        <result column="practice_type" property="practiceType"/>
+        <result column="project_type" property="projectType"/>
+        <result column="name" property="projectName"/>
+        <result column="ask_item" property="askItem"/>
+        <result column="question" property="question"/>
+        <result column="answer" property="answer"/>
+        <result column="right_answer" property="rightAnswer"/>
+        <result column="score" property="score"/>
+    </resultMap>
+
+
+</mapper>

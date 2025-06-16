@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kmbeast.mapper.PracticeMapper">
+
+    <insert id="save">
+        INSERT INTO practice (practice_type, ask_item, ask_item_text, project_id, user_id, question, answer, score,
+                              right_answer, create_time)
+        VALUES (#{practiceType}, #{askItem}, #{askItemText}, #{projectId}, #{userId}, #{question}, #{answer}, #{score},
+                #{rightAnswer}, #{createTime})
+    </insert>
+
+    <update id="update">
+        UPDATE practice
+        <set>
+            <if test="askItem != null and askItem != ''">
+                ask_item = #{askItem},
+            </if>
+            <if test="askItemText != null and askItemText != ''">
+                ask_item_text = #{askItemText},
+            </if>
+            <if test="practiceType != null">
+                practice_type = #{practiceType},
+            </if>
+            <if test="projectId != null">
+                project_id = #{projectId},
+            </if>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="question != null and question != ''">
+                question = #{question},
+            </if>
+            <if test="answer != null and answer != ''">
+                answer = #{answer},
+            </if>
+            <if test="rightAnswer != null and rightAnswer != ''">
+                right_answer = #{rightAnswer},
+            </if>
+            <if test="score != null">
+                score = #{score}
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="batchDelete" parameterType="list">
+        DELETE FROM practice WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="queryByIds" resultMap="BaseResultMap">
+        SELECT p.*
+        FROM practice p WHERE p.id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+
+    <select id="query" resultMap="BaseResultMap">
+
+        SELECT p.*,pt.name AS project_name,u.user_name
+        FROM practice p
+        LEFT JOIN project_type pt ON pt.id = p.project_id
+        LEFT JOIN user u ON u.id = p.user_id
+        <where>
+            <if test="askItem != null and askItem != ''">
+                AND p.ask_item LIKE concat('%',#{askItem},'%')
+            </if>
+            <if test="projectId != null">
+                AND project_id = #{projectId}
+            </if>
+            <if test="practiceType != null">
+                AND practice_type = #{practiceType}
+            </if>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="startTime != null and endTime != null">
+                AND p.create_time BETWEEN #{startTime} AND #{endTime}
+            </if>
+        </where>
+        ORDER BY p.id DESC
+        <if test="current != null and size != null">
+            LIMIT #{current},#{size}
+        </if>
+    </select>
+
+    <select id="queryCount" resultType="integer">
+
+        SELECT COUNT(*)
+        FROM practice
+        <where>
+            <if test="askItem != null and askItem != ''">
+                AND ask_item LIKE concat('%',#{askItem},'%')
+            </if>
+            <if test="projectId != null">
+                AND project_id = #{projectId}
+            </if>
+            <if test="practiceType != null">
+                AND practice_type = #{practiceType}
+            </if>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="startTime != null and endTime != null">
+                AND create_time BETWEEN #{startTime} AND #{endTime}
+            </if>
+        </where>
+
+    </select>
+
+    <resultMap id="BaseResultMap" type="cn.kmbeast.pojo.vo.PracticeVO">
+        <id column="id" property="id"/>
+        <result column="ask_item" property="askItem"/>
+        <result column="ask_item_text" property="askItemText"/>
+        <result column="project_id" property="projectId"/>
+        <result column="project_name" property="projectName"/>
+        <result column="practice_type" property="practiceType"/>
+        <result column="right_answer" property="rightAnswer"/>
+        <result column="user_id" property="userId"/>
+        <result column="user_name" property="userName"/>
+        <result column="question" property="question"/>
+        <result column="answer" property="answer"/>
+        <result column="score" property="score"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+
+</mapper>

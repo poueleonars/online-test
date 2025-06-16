@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kmbeast.mapper.ProjectTypeMapper">
+
+    <insert id="save">
+        INSERT INTO project_type (name)
+        VALUES (#{name})
+    </insert>
+
+    <update id="update">
+        UPDATE project_type
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="batchDelete" parameterType="list">
+        DELETE FROM project_type WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="query" resultMap="BaseResultMap">
+
+        SELECT p.*
+        FROM project_type p
+        <where>
+            <if test="name != null and name != ''">
+                AND p.name LIKE concat('%',#{name},'%')
+            </if>
+        </where>
+        ORDER BY p.id DESC
+        <if test="current != null and size != null">
+            LIMIT #{current},#{size}
+        </if>
+    </select>
+
+    <select id="queryCount" resultType="integer">
+
+        SELECT COUNT(*)
+        FROM project_type p
+        <where>
+            <if test="name != null and name != ''">
+                AND p.name LIKE concat('%',#{name},'%')
+            </if>
+        </where>
+
+    </select>
+
+    <resultMap id="BaseResultMap" type="cn.kmbeast.pojo.entity.ProjectType">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+    </resultMap>
+
+
+</mapper>

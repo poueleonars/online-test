@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kmbeast.mapper.PaperMapper">
+
+    <insert id="save">
+        INSERT INTO paper (name, project_id, user_id, detail, limit_time, total_score, is_show, create_time)
+        VALUES (#{name}, #{projectId}, #{userId}, #{detail}, #{limitTime}, #{totalScore}, #{isShow}, #{createTime})
+    </insert>
+
+    <update id="update">
+        UPDATE paper
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="projectId != null">
+                project_id = #{projectId},
+            </if>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="totalScore != null">
+                total_score = #{totalScore},
+            </if>
+            <if test="detail != null and detail != ''">
+                detail = #{detail},
+            </if>
+            <if test="limitTime != null">
+                limit_time = #{limitTime},
+            </if>
+            <if test="isShow != null">
+                is_show = #{isShow},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="batchDelete" parameterType="list">
+        DELETE FROM paper WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="query" resultMap="BaseResultMap">
+
+        SELECT p.*,pt.name AS project_name,u.user_name
+        FROM paper p
+        LEFT JOIN project_type pt ON pt.id = p.project_id
+        LEFT JOIN user u ON u.id = p.user_id
+        <where>
+            <if test="id != null">
+                AND p.id = #{id}
+            </if>
+            <if test="name != null and name != ''">
+                AND p.name LIKE concat('%',#{name},'%')
+            </if>
+            <if test="userId != null">
+                AND p.user_id = #{userId}
+            </if>
+            <if test="detail != null and detail != ''">
+                AND p.detail LIKE concat('%',#{detail},'%')
+            </if>
+            <if test="limitTime != null">
+                AND p.limit_time = #{limitTime}
+            </if>
+            <if test="isShow != null">
+                AND p.is_show = #{isShow}
+            </if>
+            <if test="projectId != null">
+                AND p.project_id = #{projectId}
+            </if>
+            <if test="startTime != null and endTime != null">
+                AND p.create_time BETWEEN #{startTime} AND #{endTime}
+            </if>
+        </where>
+        ORDER BY p.create_time DESC
+        <if test="current != null and size != null">
+            LIMIT #{current},#{size}
+        </if>
+    </select>
+
+    <select id="queryCount" resultType="integer">
+
+        SELECT COUNT(*)
+        FROM paper p
+        <where>
+            <if test="id != null">
+                AND p.id = #{id}
+            </if>
+            <if test="name != null and name != ''">
+                AND p.name LIKE concat('%',#{name},'%')
+            </if>
+            <if test="userId != null">
+                AND p.user_id = #{userId}
+            </if>
+            <if test="detail != null and detail != ''">
+                AND p.detail LIKE concat('%',#{detail},'%')
+            </if>
+            <if test="limitTime != null">
+                AND p.limit_time = #{limitTime}
+            </if>
+            <if test="isShow != null">
+                AND p.is_show = #{isShow}
+            </if>
+            <if test="projectId != null">
+                AND p.project_id = #{projectId}
+            </if>
+            <if test="startTime != null and endTime != null">
+                AND p.create_time BETWEEN #{startTime} AND #{endTime}
+            </if>
+        </where>
+
+    </select>
+
+    <resultMap id="BaseResultMap" type="cn.kmbeast.pojo.vo.PaperVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="project_id" property="projectId"/>
+        <result column="project_name" property="projectName"/>
+        <result column="user_id" property="userId"/>
+        <result column="detail" property="detail"/>
+        <result column="limit_time" property="limitTime"/>
+        <result column="total_score" property="totalScore"/>
+        <result column="user_name" property="userName"/>
+        <result column="is_show" property="isShow"/>
+        <result column="create_time" property="createTime"/>
+
+
+    </resultMap>
+
+
+</mapper>
