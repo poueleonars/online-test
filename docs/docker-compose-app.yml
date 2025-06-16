@@ -1,0 +1,102 @@
+version: '3.8'
+# 命令执行 docker-compose -f docker-compose-app.yml up -d
+services:
+  online-test-app:
+    image: leonard1643/onlie-test-app:1.0
+    container_name: online-test-app
+    restart: always
+    ports:
+      - "21090:21090"
+    environment:
+      - TZ=PRC
+      - SERVER_PORT=21090
+      - APP_CONFIG_API_VERSION=v1
+      - APP_CONFIG_CROSS_ORIGIN=*
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=123456
+      - SPRING_DATASOURCE_URL=jdbc:mysql://online-test-mysql:3306/online-test?characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_HIKARI_POOL_NAME=Retail_HikariCP
+    volumes:
+      - ./log:/data/log
+    networks:
+      - my-network
+    depends_on:
+      online-test-mysql:
+            condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  online-test-mysql:
+    image: mysql:8.0.32
+    container_name: mysql-online-test
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: 123456
+    networks:
+      - my-network
+    depends_on:
+      - online-test-mysql-job-dbdata
+    ports:
+      - "23306:3306"
+    volumes:
+      - ./mysql/sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 15s
+    volumes_from:
+      - online-test-mysql-job-dbdata
+
+  # phpmyadmin https://hub.docker.com/_/phpmyadmin
+  online-test-phpmyadmin:
+    image: phpmyadmin:5.2.1
+    container_name: online-test-phpmyadmin
+    hostname: phpmyadmin
+    restart: always
+    ports:
+      - 9999:80
+    environment:
+      - PMA_HOST=online-test-mysql
+      - PMA_PORT=3306
+      - MYSQL_ROOT_PASSWORD=123456
+    depends_on:
+      online-test-mysql:
+        condition: service_healthy
+    networks:
+      - my-network
+
+  # 自动加载数据
+  online-test-mysql-job-dbdata:
+    image: alpine:3.18.2
+    container_name: mysql-job-dbdata-online-test
+    volumes:
+      - /var/lib/mysql
+
+  online-test-front:
+    container_name: online-test-web
+    image: leonard1643/online-test-web:1.0
+    restart: always
+    networks:
+      - my-network
+    ports:
+      - 21091:21091
+    environment:
+      - API_HOST_URL=http://127.0.0.1:21090/api/online-test/v1.0
+      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://0.0.0.0:3000/" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+
+networks:
+  my-network:
+    driver: bridge
